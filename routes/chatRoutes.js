@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const chatController = require('../controllers/chatController');
-const { protect } = require('../middleware/authMiddleware');
+const { sendMessage, getChatHistory, getChatSessions, deleteChatSession } = require('../controllers/chatController_supabase');
+const { protect } = require('../middleware/authMiddleware_supabase');
 
-router.post('/chat', chatController.getChatResponse);
-router.post('/ask', chatController.getChatResponse);
-router.post('/save', protect, chatController.saveChatHistory);
-router.get('/history', protect, chatController.getUserChats);
+router.post('/chat', protect, sendMessage);
+router.post('/ask', protect, sendMessage);
+router.post('/save', protect, sendMessage);
+router.get('/history', protect, getChatHistory);
 
 module.exports = router;

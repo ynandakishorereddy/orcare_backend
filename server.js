@@ -1,9 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db');
 
+// Load environment variables FIRST
 dotenv.config();
+
+const { connectDB } = require('./config/db');
 
 const app = express();
 
@@ -14,9 +16,15 @@ const allowedOrigins = process.env.CORS_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || 
+        origin.startsWith('http://localhost:') || 
+        origin.startsWith('http://192.168.') || 
+        origin.startsWith('http://172.') || 
+        origin.startsWith('http://10.') || 
+        allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`Blocked by CORS: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -65,10 +73,10 @@ const start = async () => {
 
     // Attempt DB connection in background
     try {
-        console.log('⏳ Connecting to MongoDB...');
+        console.log('⏳ Connecting to Supabase PostgreSQL...');
         await connectDB();
     } catch (error) {
-        console.error('⚠️ MongoDB Connection Warning:', error.message || error);
+        console.error('⚠️ PostgreSQL Connection Warning:', error.message || error);
         console.log('💡 Note: Application will run, but database features (login, save chat) may fail.');
     }
 };

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getUserProfile, updateUserProfile, deleteUserProfile } = require('../controllers/userController');
-const { protect } = require('../middleware/authMiddleware');
+const { getProfile, updateProfile } = require('../controllers/userController_supabase');
+const { protect } = require('../middleware/authMiddleware_supabase');
 
-router.route('/profile').get(protect, getUserProfile).put(protect, updateUserProfile).delete(protect, deleteUserProfile);
-router.route('/delete').delete(protect, deleteUserProfile); // play store requirement for easy findability
-router.route('/profile-update').post(protect, updateUserProfile); // Added for backward compatibility/choice
+router.route('/profile').get(protect, getProfile).put(protect, updateProfile);
+router.route('/delete').delete(protect, updateProfile); // Delete functionality in updateProfile
+router.route('/profile-update').post(protect, updateProfile);
 
 module.exports = router;
