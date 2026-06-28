@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
 
 // Load environment variables FIRST
 dotenv.config();
@@ -11,6 +12,13 @@ dotenv.config();
 const { supabase } = require('./config/supabase');
 
 const app = express();
+
+// HTTP Request Logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+} else {
+    app.use(morgan('combined'));
+}
 
 // Security Middlewares (Phase 11)
 app.use(helmet());

@@ -1,21 +1,38 @@
 {
-  "name": "backend",
+  "name": "orcare-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Production-ready backend API for the ORCare intelligent dental assistant.",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "lint": "eslint . --ext .js",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "format": "prettier --write ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynandakishorereddy/orcare_backend.git"
+  },
+  "keywords": [
+    "dental",
+    "ai",
+    "gemini",
+    "supabase",
+    "express",
+    "health"
+  ],
+  "author": "ORCare Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ynandakishorereddy/orcare_backend/issues"
+  },
+  "homepage": "https://github.com/ynandakishorereddy/orcare_backend#readme",
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.38.0",
     "axios": "^1.13.5",
-    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
@@ -24,9 +41,13 @@
     "google-auth-library": "^10.9.0",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.20.0"
+    "morgan": "^1.11.0",
+    "pg": "^8.20.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
   }
 }
