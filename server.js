@@ -7,7 +7,8 @@ const rateLimit = require('express-rate-limit');
 // Load environment variables FIRST
 dotenv.config();
 
-const { connectDB, client } = require('./config/db');
+// Supabase client
+const { supabase } = require('./config/supabase');
 
 const app = express();
 
@@ -69,18 +70,31 @@ app.use('/api/quiz', quizRoutes); // Wired up Quiz routes
 // Phase 9: Health Check Endpoint
 app.get('/api/health', async (req, res) => {
     let dbStatus = 'disconnected';
+    let errorMessage = null;
+
     try {
-        if (client) {
-            const { error } = await client.from('users').select('id').limit(1);
-            if (!error) dbStatus = 'connected';
+        const { error } = await supabase
+            .from('users')
+            .select('id')
+            .limit(1);
+
+        if (error) {
+            dbStatus = 'error';
+            errorMessage = error.message;
+            console.error('[HealthCheck] Supabase error:', error.message);
+        } else {
+            dbStatus = 'connected';
         }
     } catch (e) {
         dbStatus = 'error';
+        errorMessage = e.message;
+        console.error('[HealthCheck] Internal error:', e.message);
     }
 
     res.status(200).json({
         success: true,
         database: dbStatus,
+        error: process.env.NODE_ENV !== 'production' ? errorMessage : undefined,
         server: 'running',
         uptime: process.uptime(),
         timestamp: new Date().toISOString()
@@ -114,10 +128,12 @@ const start = async () => {
         console.log(`\n🚀 ORCare Backend Server is LIVE on port ${PORT}`);
     });
 
-    // Attempt DB connection in background
+    // Verify DB connection on startup
     try {
-        console.log('⏳ Connecting to Supabase PostgreSQL...');
-        await connectDB();
+        console.log('⏳ Verifying Supabase PostgreSQL connection...');
+        const { error } = await supabase.from('users').select('id').limit(1);
+        if (error) throw error;
+        console.log('✅ Supabase PostgreSQL Connected Successfully!');
     } catch (error) {
         console.error('⚠️ PostgreSQL Connection Warning:', error.message || error);
     }

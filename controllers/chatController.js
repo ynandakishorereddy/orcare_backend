@@ -11,7 +11,7 @@ KEEP RESPONSES CONCISE: Limit your explanations to 3-4 lines normally.
 const getModel = () => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     return genAI.getGenerativeModel({
-        model: "gemini-flash-latest", // Upgraded to flash-latest for robust generic fallback
+        model: "gemini-2.5-flash", // Upgraded to stable gemini-2.5-flash to avoid 503 high demand errors
         systemInstruction: clinicalKnowledge,
     });
 };
