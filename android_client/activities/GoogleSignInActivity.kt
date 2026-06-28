@@ -26,7 +26,7 @@ class GoogleSignInActivity : AppCompatActivity() {
         // setContentView(R.layout.activity_google_sign_in)
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("YOUR_WEB_CLIENT_ID") // Ensure this matches the Backend Client ID
+            .requestIdToken("688644594315-440mq0nsruk81ip5l948248el7ae5gqd.apps.googleusercontent.com") // Ensure this matches the Backend Client ID
             .requestEmail()
             .build()
 
