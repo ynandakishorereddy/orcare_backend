@@ -1,33 +1,46 @@
-package com.orcare.client.network
+package com.example.orcare.network
 
-import com.orcare.client.models.AuthResponse
-import com.orcare.client.models.LoginRequest
-import com.orcare.client.models.RegisterRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.DELETE
+
+data class GoogleLoginRequest(
+    val idToken: String,
+    val language: String = "English"
+)
+
+data class AuthResponse(
+    val success: Boolean,
+    val message: String?,
+    val token: String?,
+    // Add user fields as needed
+)
 
 interface ApiService {
-    @POST("api/auth/register")
-    suspend fun register(@Body req: RegisterRequest): Response<AuthResponse>
 
-    @POST("api/auth/login")
-    suspend fun login(@Body credentials: LoginRequest): Response<AuthResponse>
+    // Authentication
+    @POST("api/auth/google")
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<AuthResponse>
 
-    @POST("api/auth/forgot-password")
-    suspend fun forgotPassword(@Body body: Map<String, String>): Response<Map<String, String>>
+    @GET("api/auth/me")
+    suspend fun getCurrentUser(): Response<AuthResponse>
 
-    @POST("api/auth/verify-otp")
-    suspend fun verifyOtp(@Body body: Map<String, String>): Response<Map<String, Any>>
+    // Profile
+    @PUT("api/user/profile")
+    suspend fun updateProfile(@Body profileData: Any): Response<Any>
 
-    @POST("api/auth/reset-password")
-    suspend fun resetPassword(@Body body: Map<String, String>): Response<Map<String, String>>
+    @DELETE("api/user")
+    suspend fun deleteAccount(): Response<Any>
 
-    @GET("api/users/profile")
-    suspend fun getProfile(): Response<AuthResponse>
+    // Health and Version
+    @GET("api/health")
+    suspend fun getHealth(): Response<Any>
 
-    @PUT("api/users/profile")
-    suspend fun updateProfile(@Body body: Map<String, Any>): Response<AuthResponse>
+    @GET("api/version")
+    suspend fun getVersion(): Response<Any>
+
+    // Other Endpoints (Chat, Quiz, Content) would go here...
 }

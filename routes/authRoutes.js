@@ -1,14 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, verifyOtp, resendOtp, forgotPassword, resetPassword, requestDeleteOtp, confirmDeleteAccount } = require('../controllers/authController_supabase');
+const { body } = require('express-validator');
+const { googleLogin, getMe } = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/verify-otp', verifyOtp);
-router.post('/resend-otp', resendOtp);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
-router.post('/request-delete-otp', requestDeleteOtp);
-router.post('/confirm-delete-account', confirmDeleteAccount);
+// Validation middleware
+const validateRequest = (req, res, next) => {
+    const { validationResult } = require('express-validator');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    next();
+};
+
+router.post(
+    '/google',
+    [
+        body('idToken').notEmpty().withMessage('Google idToken is required')
+    ],
+    validateRequest,
+    googleLogin
+);
+
+router.get('/me', protect, getMe);
 
 module.exports = router;

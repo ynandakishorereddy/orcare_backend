@@ -1,77 +1,106 @@
-const mongoose = require('mongoose');
+const { supabase } = require('../config/supabase');
 
-const userController = {
-    // @desc    Get user profile
-    // @route   GET /api/users/profile
-    // @access  Private
-    getUserProfile: async (req, res) => {
-        const user = await req.user;
-        if (user) {
-            res.json(user);
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
-    },
+// @desc Update user profile
+const updateProfile = async (req, res) => {
+    const userId = req.user?.id;
+    // We intentionally ignore email and google_id so they cannot be modified
+    const {
+        name,
+        age,
+        gender,
+        district,
+        state,
+        profileImageUri,
+        language,
+        // notification_settings and reminder_settings can be added here if DB supports them
+    } = req.body;
 
-    // @desc    Update user profile
-    // @route   PUT /api/users/profile
-    // @access  Private
-    updateUserProfile: async (req, res) => {
-        const user = await req.user;
+    if (!userId) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
-        if (user) {
-            user.name = req.body.name || user.name;
-            user.email = req.body.email || user.email;
-            user.district = req.body.district || user.district;
-            user.state = req.body.state || user.state;
-            user.profileImageIndex = req.body.profileImageIndex !== undefined ? req.body.profileImageIndex : user.profileImageIndex;
-            if (req.body.profileImageUri !== undefined) user.profileImageUri = req.body.profileImageUri;
-            user.language = req.body.language || user.language;
+    try {
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (age !== undefined) updateData.age = age;
+        if (gender !== undefined) updateData.gender = gender;
+        if (district !== undefined) updateData.district = district;
+        if (state !== undefined) updateData.state = state;
+        if (profileImageUri !== undefined) updateData.profile_image_uri = profileImageUri;
+        if (language !== undefined) updateData.language = language;
 
-            if (req.body.password) {
-                user.password = req.body.password;
+        const { data: updatedUser, error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user: {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                age: updatedUser.age,
+                gender: updatedUser.gender,
+                district: updatedUser.district,
+                state: updatedUser.state,
+                profileImageUri: updatedUser.profile_image_uri,
+                language: updatedUser.language,
+                isEmailVerified: updatedUser.is_email_verified,
             }
-
-            const updatedUser = await user.save();
-
-            res.json({
-                success: true,
-                message: "Profile updated successfully",
-                user: {
-                    _id: updatedUser._id,
-                    name: updatedUser.name,
-                    email: updatedUser.email,
-                    district: updatedUser.district,
-                    state: updatedUser.state,
-                    profileImageIndex: updatedUser.profileImageIndex,
-                    profileImageUri: updatedUser.profileImageUri,
-                    language: updatedUser.language
-                },
-                token: require('jsonwebtoken').sign({ id: updatedUser._id }, process.env.JWT_SECRET, {
-                    expiresIn: '30d'
-                })
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
-    },
-
-    // @desc    Delete user account
-    // @route   DELETE /api/users/profile
-    // @access  Private
-    deleteUserProfile: async (req, res) => {
-        const user = await req.user;
-
-        if (user) {
-            await user.deleteOne();
-            res.json({
-                success: true,
-                message: 'User account deleted successfully'
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
+        });
+    } catch (error) {
+        console.error('Update profile error:', error.message);
+        return res.status(500).json({ success: false, message: error.message || "Failed to update profile" });
     }
 };
 
-module.exports = userController;
+// @desc Delete user account
+const deleteUser = async (req, res) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    try {
+        // 1. Delete all chat messages inside user's sessions (Cascade is better, but doing it manually just in case)
+        const { data: sessions } = await supabase.from('chat_sessions').select('id').eq('user_id', userId);
+        if (sessions && sessions.length > 0) {
+            const sessionIds = sessions.map(s => s.id);
+            await supabase.from('chat_messages').delete().in('chat_session_id', sessionIds);
+        }
+
+        // 2. Delete chat sessions
+        await supabase.from('chat_sessions').delete().eq('user_id', userId);
+
+        // 3. Delete quizzes
+        await supabase.from('quizzes').delete().eq('user_id', userId);
+
+        // 4. Delete user profile (Supabase auth users table if applicable, but this is our custom users table)
+        const { error: deleteError } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', userId);
+
+        if (deleteError) throw deleteError;
+
+        return res.status(200).json({
+            success: true,
+            message: "Account and all associated data deleted successfully"
+        });
+    } catch (error) {
+        console.error('Delete account error:', error.message);
+        return res.status(500).json({ success: false, message: error.message || "Failed to delete account" });
+    }
+};
+
+module.exports = {
+    updateProfile,
+    deleteUser
+};
